@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MVWS Conveyor Calculator (Vanilla JS)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>MVWS Conveyor – Water Demand & Nozzle Sizing</h1>
+      <div class="actions">
+        <button id="shareUrlBtn" class="btn">Share URL</button>
+        <button id="exportBtn" class="btn">Export JSON</button>
+        <button id="resetBtn" class="btn danger">Reset</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Editable Inputs (Blue cells)</h2>
+      <div class="grid">
+        <label>Conveyor Length (m) – <b>B3</b>
+          <input class="edit" id="B3_length_m" type="number" step="any">
+        </label>
+        <label>Conveyor Width (m) – <b>C3</b>
+          <input class="edit" id="C3_width_m" type="number" step="any">
+        </label>
+        <label>No. of Belts – <b>D3</b>
+          <input class="edit" id="D3_belts" type="number" step="1" min="1">
+        </label>
+        <label>Max Nozzle Spacing (m) – <b>C4</b>
+          <input class="edit" id="C4_nozzleSpacing_m" type="number" step="any" min="0.0001">
+        </label>
+        <label>Nozzles per Location – <b>C5</b>
+          <input class="edit" id="C5_nozzlesPerLocation" type="number" step="1" min="1">
+        </label>
+        <label>LHS Cable Runs (sides) – <b>C6</b>
+          <input class="edit" id="C6_lhsSides" type="number" step="1" min="0">
+        </label>
+        <label>LHS to Panel (m) – <b>C7</b>
+          <input class="edit" id="C7_lhsToPanel_m" type="number" step="any" min="0">
+        </label>
+        <label>System Pressure (bar) – <b>C10</b>
+          <input class="edit" id="C10_pressure_bar" type="number" step="any" min="0.0001">
+        </label>
+      </div>
+      <p class="note">
+        Design density fixed at <b>10.2 lpm/m²</b> (IS:15325 cl. 8.7.2). L/min → m³/h factor = <b>0.06</b>.
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>Results</h2>
+      <ul id="results" class="kvp"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Assumptions & Formulae</h2>
+      <ul class="bullets">
+        <li>Nozzle quantity = EVEN(ROUNDUP(L/spacing) × nozzles/location × 1.05)</li>
+        <li>LHS total (m) = EVEN(ROUNDUP(L × runs) + panel-run) × 1.1</li>
+        <li>K (calc) = (Flow per nozzle) / √(Pressure)</li>
+        <li>Selected K ∈ {18, 22, 26, 30, 34, 41, 51, 64, 79, 91}</li>
+      </ul>
+    </section>
+
+    <footer class="footer">© <span id="year"></span> MVWS Conveyor Tool • Vanilla JS</footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

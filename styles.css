@@ -1,0 +1,19 @@
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;background:#f7fafc;color:#0f172a}
+.container{max-width:1000px;margin:0 auto;padding:24px}
+.header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+h1{font-size:clamp(20px,3vw,28px);margin:0}
+.actions{display:flex;gap:8px}
+.btn{padding:8px 12px;border:1px solid #cbd5e1;background:#fff;border-radius:10px;cursor:pointer}
+.btn:hover{background:#f1f5f9}
+.danger{border-color:#fecaca;background:#fff5f5}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+label{display:flex;flex-direction:column;font-size:14px;color:#334155;gap:6px}
+input{padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+.edit{background:#e0f2fe}
+.kvp{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.kvp li{display:flex;justify-content:space-between;gap:12px;border:1px solid #e5e7eb;padding:10px;border-radius:10px}
+.kvp b{font-weight:600}
+.note{color:#475569;font-size:13px;margin-top:8px}
+.bullets{margin:0 0 0 18px;color:#475569}
+.footer{margin-top:12px;text-align:center;color:#64748b;font-size:12px}
