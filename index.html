@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MVWS Conveyor Calculator (Vanilla JS)</title>
+  <title>MVWS Conveyor Calculator</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,42 +11,57 @@
     <header class="header">
       <h1>MVWS Conveyor – Water Demand & Nozzle Sizing</h1>
       <div class="actions">
-        <button id="shareUrlBtn" class="btn">Share URL</button>
-        <button id="exportBtn" class="btn">Export JSON</button>
+        <button id="shareUrlBtn" class="btn subtle">Share URL</button>
+        <button id="exportBtn" class="btn subtle">Export JSON</button>
+        <button id="pdfBtn" class="btn">Download PDF</button>
         <button id="resetBtn" class="btn danger">Reset</button>
       </div>
     </header>
 
+    <section class="banner">
+      <div class="banner-title">Row 2 – Item Description</div>
+      <div class="banner-body">
+        Sr. No. • Conveyor Length • Conveyor Width • Conveyor No. of Belt •
+        <b>Total Area (m²)</b> — Formula: <code>L × W × Number of Belts</code>
+      </div>
+    </section>
+
     <section class="card">
-      <h2>Editable Inputs (Blue cells)</h2>
-      <div class="grid">
+      <h2>Editable Inputs</h2>
+      <div class="grid two-cols">
         <label>Conveyor Length (m) – <b>B3</b>
           <input class="edit" id="B3_length_m" type="number" step="any">
         </label>
         <label>Conveyor Width (m) – <b>C3</b>
           <input class="edit" id="C3_width_m" type="number" step="any">
         </label>
-        <label>No. of Belts – <b>D3</b>
-          <input class="edit" id="D3_belts" type="number" step="1" min="1">
-        </label>
-        <label>Max Nozzle Spacing (m) – <b>C4</b>
-          <input class="edit" id="C4_nozzleSpacing_m" type="number" step="any" min="0.0001">
-        </label>
-        <label>Nozzles per Location – <b>C5</b>
-          <input class="edit" id="C5_nozzlesPerLocation" type="number" step="1" min="1">
-        </label>
-        <label>LHS Cable Runs (sides) – <b>C6</b>
-          <input class="edit" id="C6_lhsSides" type="number" step="1" min="0">
-        </label>
-        <label>LHS to Panel (m) – <b>C7</b>
-          <input class="edit" id="C7_lhsToPanel_m" type="number" step="any" min="0">
-        </label>
-        <label>System Pressure (bar) – <b>C10</b>
-          <input class="edit" id="C10_pressure_bar" type="number" step="any" min="0.0001">
-        </label>
       </div>
+
+      <details id="advToggle" class="advanced">
+        <summary>Advanced inputs (if applicable)</summary>
+        <div class="grid three-cols">
+          <label>No. of Belts – <b>D3</b>
+            <input class="edit" id="D3_belts" type="number" step="1" min="1">
+          </label>
+          <label>Max Nozzle Spacing (m) – <b>C4</b>
+            <input class="edit" id="C4_nozzleSpacing_m" type="number" step="any" min="0.0001">
+          </label>
+          <label>Nozzles per Location – <b>C5</b>
+            <input class="edit" id="C5_nozzlesPerLocation" type="number" step="1" min="1">
+          </label>
+          <label>LHS Cable Runs (3 sides) – <b>C6</b>
+            <input class="edit" id="C6_lhsSides" type="number" step="1" min="0">
+          </label>
+          <label>LHS to Panel Distance (m) – <b>C7</b>
+            <input class="edit" id="C7_lhsToPanel_m" type="number" step="any" min="0">
+          </label>
+          <label>System Pressure (bar) – <b>C10</b>
+            <input class="edit" id="C10_pressure_bar" type="number" step="any" min="0.0001">
+          </label>
+        </div>
+      </details>
       <p class="note">
-        Design density fixed at <b>10.2 lpm/m²</b> (IS:15325 cl. 8.7.2). L/min → m³/h factor = <b>0.06</b>.
+        Design density: <b>10.2 lpm/m²</b> (IS:15325 cl. 8.7.2) • L/min → m³/h factor: <b>0.06</b>
       </p>
     </section>
 
@@ -56,16 +71,30 @@
     </section>
 
     <section class="card">
-      <h2>Assumptions & Formulae</h2>
+      <h2>Deluge Valve Selection</h2>
+      <p class="note small">Based on <b>Actual Flow Provided (m³/h)</b> using Excel thresholds.</p>
+      <div id="dvs" class="dvs"></div>
+    </section>
+
+    <section class="card">
+      <h2>Formulae</h2>
       <ul class="bullets">
-        <li>Nozzle quantity = EVEN(ROUNDUP(L/spacing) × nozzles/location × 1.05)</li>
-        <li>LHS total (m) = EVEN(ROUNDUP(L × runs) + panel-run) × 1.1</li>
-        <li>K (calc) = (Flow per nozzle) / √(Pressure)</li>
-        <li>Selected K ∈ {18, 22, 26, 30, 34, 41, 51, 64, 79, 91}</li>
+        <li>Total Area = <code>L × W × Belts</code></li>
+        <li>Theoretical Flow (L/min) = <code>Area × 10.2</code>; <code>m³/h = L/min × 0.06</code></li>
+        <li>Nozzle Qty = <code>EVEN(ROUNDUP(L/spacing) × nozzles/location × 1.05)</code></li>
+        <li>LHS (m) = <code>EVEN(ROUNDUP(L × runs) + panel-run) × 1.1</code></li>
+        <li>Flow/Nozzle = <code>Total L/min ÷ Nozzle Qty</code></li>
+        <li>K (calc) = <code>(Flow/Nozzle) ÷ √Pressure</code></li>
+        <li>K Selected = <code>18,22,26,30,34,41,51,64,79, else 91</code></li>
+        <li>Actual Flow (L/min) = <code>K × √Pressure × Nozzles</code></li>
+        <li>Actual Flow (m³/h) = <code>Actual L/min × 0.06</code></li>
+        <li>Deluge Valve (mm) =
+          <code>Not&nbsp;Found if &lt;10 or &gt;501; else 50 if ≥10; 80 if ≥51; 100 if ≥101; 150 if ≥201</code>
+        </li>
       </ul>
     </section>
 
-    <footer class="footer">© <span id="year"></span> MVWS Conveyor Tool • Vanilla JS</footer>
+    <footer class="footer">© <span id="year"></span> MVWS Conveyor Tool</footer>
   </main>
 
   <script src="script.js"></script>
