@@ -2,7 +2,7 @@
   const $ = (id) => document.getElementById(id);
   const yearEl = $('year'); yearEl.textContent = new Date().getFullYear();
 
-  const STORAGE_KEY = 'mvws_conveyor_inputs_vanilla_v1';
+  const STORAGE_KEY = 'mvws_conveyor_inputs_vanilla_v2';
   const defaults = {
     B3_length_m: 172,
     C3_width_m: 0.8,
@@ -43,13 +43,13 @@
       }
     } catch(e){}
     for (const k of Object.keys(defaults)) {
-      $(k).value = state[k];
+      if ($(k)) $(k).value = state[k];
     }
   }
 
   function readState() {
     const s = {};
-    for (const k of Object.keys(defaults)) s[k] = toNum($(k).value, defaults[k]);
+    for (const k of Object.keys(defaults)) if ($(k)) s[k] = toNum($(k).value, defaults[k]);
     return s;
   }
 
@@ -80,7 +80,23 @@
     const kCalc = flowPerNozzle_Lpm / Math.sqrt(Pbar);
     const kSelected = kBucket(kCalc);
 
-    return { inp, area_m2, flow_Lpm, flow_m3h, nozzleQty, lhsBase, lhsEven, lhsWith10, flowPerNozzle_Lpm, kCalc, kSelected };
+    // Actual flows from selected K (per Excel rows 16-17)
+    const actual_Lpm = kSelected * Math.sqrt(Pbar) * nozzleQty;
+    const actual_m3h = actual_Lpm * 0.06;
+
+    // Deluge Valve selection (per Excel row 18)
+    let delugeValve = "Not Found";
+    if (actual_m3h >= 10 && actual_m3h <= 501) {
+      if (actual_m3h >= 201) delugeValve = 150;
+      else if (actual_m3h >= 101) delugeValve = 100;
+      else if (actual_m3h >= 51) delugeValve = 80;
+      else if (actual_m3h >= 10) delugeValve = 50;
+    }
+
+    return {
+      inp, area_m2, flow_Lpm, flow_m3h, nozzleQty, lhsBase, lhsEven, lhsWith10,
+      flowPerNozzle_Lpm, kCalc, kSelected, actual_Lpm, actual_m3h, delugeValve
+    };
   }
 
   function render() {
@@ -95,6 +111,7 @@
       ['Flow per Nozzle', `${round(r.flowPerNozzle_Lpm,2)} L/min`],
       ['K-Factor (calc)', `${round(r.kCalc,2)}`],
       ['MVWS Nozzle Selected (K)', `K = ${r.kSelected}`],
+      ['Actual Flow (based on K)', `${round(r.actual_Lpm,2)} L/min (${round(r.actual_m3h,2)} m³/h)`],
     ];
     const ul = $('results'); ul.innerHTML='';
     for (const [k,v] of kv) {
@@ -104,15 +121,23 @@
       li.appendChild(a); li.appendChild(b);
       ul.appendChild(li);
     }
+
+    const dvs = $('dvs');
+    dvs.innerHTML='';
+    const label = document.createElement('span');
+    label.textContent = 'Selected Size:';
+    const badge = document.createElement('span');
+    badge.className = 'badge ' + (r.delugeValve==='Not Found' ? 'warn' : 'ok');
+    badge.textContent = r.delugeValve==='Not Found' ? 'Not Found' : `${r.delugeValve} mm`;
+    dvs.appendChild(label); dvs.appendChild(badge);
   }
 
   function bind() {
     for (const k of Object.keys(defaults)) {
-      $(k).addEventListener('input', render);
-      $(k).addEventListener('change', render);
+      if ($(k)) { $(k).addEventListener('input', render); $(k).addEventListener('change', render); }
     }
     $('resetBtn').addEventListener('click', ()=> {
-      for (const k of Object.keys(defaults)) $(k).value = defaults[k];
+      for (const k of Object.keys(defaults)) if ($(k)) $(k).value = defaults[k];
       render();
     });
     $('exportBtn').addEventListener('click', ()=> {
@@ -135,6 +160,7 @@
         prompt('Copy this URL:', u.toString());
       });
     });
+    $('pdfBtn').addEventListener('click', ()=> window.print());
   }
 
   loadInputs();
